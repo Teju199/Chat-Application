@@ -4,6 +4,7 @@
     package="com.example.chatapplication">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
         android:allowBackup="true"
@@ -15,10 +16,6 @@
         android:requestLegacyExternalStorage="true"
         android:theme="@style/Theme.ChatApplication">
         <activity android:name=".view.ActivityHomePage"
-            android:exported="false"/>
-        <activity android:name=".view.ActivityUserProfile"
-            android:exported="false"/>
-        <activity android:name=".view.ActivityDummy"
             android:exported="false"/>
         <activity
             android:name=".view.MainActivity"

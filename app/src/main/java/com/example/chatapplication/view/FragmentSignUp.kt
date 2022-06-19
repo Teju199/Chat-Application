@@ -126,7 +126,7 @@ class FragmentSignUp: Fragment() {
                 if (it.status) {
                     Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
 
-                    val firebaseUser: FirebaseUser? = firebaseAuth.getCurrentUser()
+                    val firebaseUser: FirebaseUser? = firebaseAuth.currentUser
 
                     firebaseUser?.sendEmailVerification()?.addOnCompleteListener {
                         Toast.makeText(

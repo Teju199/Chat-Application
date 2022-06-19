@@ -1,43 +1,56 @@
 package com.example.chatapplication.view
 
-import android.graphics.Bitmap
-import android.graphics.drawable.Icon
-import android.net.Uri
+import android.content.Intent
+import android.icu.text.SimpleDateFormat
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
+import android.widget.*
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
-import com.bumptech.glide.Glide
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.chatapplication.R
+import com.example.chatapplication.model.Chat
+import com.example.chatapplication.model.ChatAdapter
 import com.example.chatapplication.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
+import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.squareup.picasso.Picasso
 import de.hdodenhof.circleimageview.CircleImageView
+import java.sql.Time
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 class FragmentChat(val userId: String, val userName: String, val imageUser: CircleImageView) : Fragment() {
 
-    lateinit var firebaseUser: FirebaseUser
-    lateinit var reference: DatabaseReference
+    private lateinit var firebaseUser: FirebaseUser
+    private lateinit var reference: DatabaseReference
+    private var chatList = ArrayList<Chat>()
+    private lateinit var chatRecyclerView: RecyclerView
 
-
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
 
-        val tvUserName: TextView = view
+        val view = inflater.inflate(R.layout.fragment_chat, container, false)
 
+        val tvUserName: TextView = view.findViewById(R.id.tvUserName1)
+        val imageBack: ImageView = view.findViewById(R.id.imgBack)
+        val sendMessageBtn: ImageButton = view.findViewById(R.id.btnSendMessage)
+        val etMessage: EditText = view.findViewById(R.id.etMessage1)
+        chatRecyclerView = view.findViewById(R.id.chatRecyclerView)
 
-            .findViewById(R.id.tvUserName1)
-        val imgProfile: CircleImageView = view?.findViewById(R.id.imgProfile1)
+        chatRecyclerView.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
 
 
         firebaseUser = FirebaseAuth.getInstance().currentUser!!
@@ -50,25 +63,6 @@ class FragmentChat(val userId: String, val userName: String, val imageUser: Circ
                 val user = snapshot.getValue(User::class.java)
 
                 tvUserName?.setText(userName)
-
-                if (user?.profileImage == "") {
-                    imgProfile?.setImageResource(R.drawable.profile_image)
-                } else {
-                    //Glide.with(context!!).load(user?.profileImage).into(imgProfile!!)
-                }
-
-                //Picasso.get().load(imageUser as Uri).into(imgProfile)
-
-
-                /*val profileRef: StorageReference = FirebaseStorage.getInstance().reference.child(
-                    "users/$userId/profile.jpg")
-
-                //Picasso.get().load(imageUser as String?).into(imgProfile)
-
-                profileRef.downloadUrl.addOnSuccessListener {
-                    Picasso.get().load(imageUser as String?).into(imgProfile)
-                }*/
-
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -78,9 +72,70 @@ class FragmentChat(val userId: String, val userName: String, val imageUser: Circ
 
         })
 
+        sendMessageBtn.setOnClickListener {
+            var message: String = etMessage.text.toString()
 
+            if(message.isEmpty()){
+                Toast.makeText(context, "Message is empty", Toast.LENGTH_SHORT).show()
+                etMessage.setText("")
+            }
+            else{
+                sendMessage(firebaseUser.uid, userId, message)
+                etMessage.setText("")
+            }
+        }
 
-        return inflater.inflate(R.layout.fragment_chat, container, false)
+        readMessage(firebaseUser.uid, userId)
+
+        imageBack.setOnClickListener {
+            activity?.onBackPressed()
+        }
+
+        return view
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun sendMessage(senderId: String, receiverId: String, message: String){
+        var reference: DatabaseReference = FirebaseDatabase.getInstance().reference
+        val current = LocalTime.now()
+        val formatter = DateTimeFormatter.ofPattern("HH:mm:ss")
+        val time = current.format(formatter)
+
+        var hashMap: HashMap<String, String> = HashMap()
+        hashMap["senderId"] = senderId
+        hashMap["receiverId"] = receiverId
+        hashMap["message"] = message
+        hashMap["time"] = time
+
+        reference.child("chat").push().setValue(hashMap)
+    }
+
+    private fun readMessage(senderId: String, receiverId: String): RecyclerView{
+        val databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("chat")
+
+        databaseReference.addValueEventListener(object: ValueEventListener{
+            override fun onDataChange(snapshot: DataSnapshot) {
+                chatList.clear()
+
+                for(dataSnapshot: DataSnapshot in snapshot.children){
+                    val chat = dataSnapshot.getValue(Chat::class.java)
+
+                    if(chat!!.senderId == senderId && chat!!.receiverId == receiverId ||
+                        chat!!.senderId == receiverId && chat!!.receiverId == senderId
+                    ){
+                            chatList.add(chat)
+                    }
+                }
+
+                val chatAdapter = ChatAdapter(context!!, chatList, userId)
+                chatRecyclerView.adapter = chatAdapter
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                TODO("Not yet implemented")
+            }
+        })
+        return chatRecyclerView
     }
 }
 

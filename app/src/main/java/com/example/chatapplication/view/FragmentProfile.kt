@@ -36,9 +36,7 @@ class FragmentProfile: Fragment() {
     private lateinit var storage: FirebaseStorage
     lateinit var storageReference: StorageReference
     lateinit var imageUri: Uri
-
     private val PICK_IMAGE: Int = 2020
-    private var filePath: Uri? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -51,7 +49,6 @@ class FragmentProfile: Fragment() {
         fullName = view.findViewById(R.id.fullName1)
 
         val backButton: FloatingActionButton = view.findViewById(R.id.close)
-        val logout: Button = view.findViewById(R.id.logout1)
 
         storage = FirebaseStorage.getInstance()
         firebaseUser = FirebaseAuth.getInstance().currentUser!!
@@ -92,38 +89,17 @@ class FragmentProfile: Fragment() {
         })
 
         backButton.setOnClickListener {
-            activity?.onBackPressed()
+            val intent: Intent = Intent(context, ActivityHomePage::class.java)
+            startActivity(intent)
         }
 
         profileImage.setOnClickListener {
             chooseImage()
         }
 
-        //uploadImage()
-
         return view
     }
 
-    private fun uploadImage() {
-        if (filePath != null) {
-
-            var ref: StorageReference = storageReference.child("image/" + UUID.randomUUID().toString())
-            ref.putFile(filePath!!)
-                .addOnSuccessListener {
-
-                    val hashMap:HashMap<String,String> = HashMap()
-                    hashMap["userName"] = fullName.text.toString()
-                    hashMap["profileImage"] = filePath.toString()
-                    databaseReference.updateChildren(hashMap as Map<String, Any>)
-                    Toast.makeText(context, "Uploaded", Toast.LENGTH_SHORT).show()
-                }
-                .addOnFailureListener {
-                    Toast.makeText(context, "Failed", Toast.LENGTH_SHORT)
-                        .show()
-
-                }
-        }
-    }
 
     private fun chooseImage() {
         val intent: Intent = Intent()

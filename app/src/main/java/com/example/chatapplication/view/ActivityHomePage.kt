@@ -1,34 +1,57 @@
 package com.example.chatapplication.view
 
 import android.os.Bundle
+import android.util.Log
+import android.view.Gravity
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.ImageView
+import androidx.appcompat.widget.SearchView
 import android.widget.Toast
+import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.MenuItemCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.chatapplication.model.Adapter
 import com.example.chatapplication.R
 import com.example.chatapplication.model.User
+import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
+import com.squareup.picasso.Picasso
 
-class ActivityHomePage: AppCompatActivity()  {
+class ActivityHomePage: AppCompatActivity() {
 
     lateinit var recyclerView: RecyclerView
     lateinit var userList: ArrayList<User>
+    lateinit var menuview: Menu
+    //lateinit var userAdapter: Adapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home_page)
 
-        val user = User()
         userList = ArrayList<User>()
         recyclerView = findViewById(R.id.userRecyclerView)
 
+        val searchView: SearchView = findViewById(R.id.search)
+        searchView.onActionViewCollapsed()
+        searchView.clearFocus()
+
+
         var imageBack: ImageView = findViewById(R.id.imgBack)
-        var profileImage : ImageView = findViewById(R.id.imgProfile1)
+
+
+        var toolbar: androidx.appcompat.widget.Toolbar = findViewById(R.id.toolBar)
+        setSupportActionBar(toolbar)
+
+        supportActionBar?.setDisplayShowTitleEnabled(false)
+        supportActionBar?.setHomeButtonEnabled(true)
 
         recyclerView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
 
@@ -38,17 +61,18 @@ class ActivityHomePage: AppCompatActivity()  {
 
         getUserList()
 
-        profileImage.setOnClickListener{
-            Toast.makeText(this, "clicked on profile", Toast.LENGTH_SHORT).show()
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(p0: String?): Boolean {
+                return false
+            }
 
-            supportFragmentManager.beginTransaction().add(
-                R.id.fragmentContainer1,
-                FragmentProfile()
-            ).commit()
-
-            Glide.with(this).load(user.profileImage).into(profileImage)
-        }
-
+            override fun onQueryTextChange(newText: String?): Boolean {
+                Log.d("onQueryTextChange", "query: $newText")
+                var userAdapter: Adapter = Adapter(userList, this@ActivityHomePage)
+                userAdapter.filter.filter(newText!!)
+                return true
+            }
+        })
     }
 
     private fun getUserList(){
@@ -79,6 +103,35 @@ class ActivityHomePage: AppCompatActivity()  {
             }
 
         })
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        this.menuview = menu!!
+        menuInflater.inflate(R.menu.menuview, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when(item.itemId){
+
+            R.id.action_profile ->{
+                supportFragmentManager.beginTransaction().add(
+                    R.id.fragmentContainer1,
+                    FragmentProfile()
+                ).commit()
+            }
+
+            R.id.action_logout -> {
+                FirebaseAuth.getInstance().signOut()
+                supportFragmentManager.beginTransaction().add(
+                    R.id.fragmentContainer1,
+                    FragmentLogin()
+                ).commit()
+
+            }
+        }
+        return super.onOptionsItemSelected(item)
     }
 
 }

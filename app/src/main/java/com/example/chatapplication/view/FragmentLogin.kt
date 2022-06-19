@@ -26,7 +26,7 @@ class FragmentLogin: Fragment() {
     lateinit var firebaseAuth: FirebaseAuth
     private lateinit var loginViewModel: LoginViewModel
     private lateinit var sharedViewModel: SharedViewModel
-    lateinit var firebaseUser: FirebaseUser
+    //lateinit var firebaseUser: FirebaseUser
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -42,9 +42,9 @@ class FragmentLogin: Fragment() {
         val signUp: TextView = view.findViewById(R.id.signUpBtn)
         firebaseAuth = FirebaseAuth.getInstance()
 
-        firebaseUser = firebaseAuth.currentUser!!
+        /*firebaseUser = firebaseAuth.currentUser!!
 
-        /*if(firebaseUser != null){
+        if(firebaseUser != null){
             val intent: Intent = Intent(activity, ActivityHomePage::class.java)
             startActivity(intent)
             activity?.finish()
@@ -104,7 +104,6 @@ class FragmentLogin: Fragment() {
                 transaction.replace(R.id.fragmentContainer, FragmentSignUp())
                 transaction.disallowAddToBackStack()
                 transaction.commit()
-                activity?.finish()
             }
         }
 
