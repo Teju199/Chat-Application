@@ -4,6 +4,7 @@ import android.content.Intent
 import android.icu.text.SimpleDateFormat
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,8 +14,11 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.chatapplication.R
+import com.example.chatapplication.api.PushNotification
+import com.example.chatapplication.api.RetrofitInstance
 import com.example.chatapplication.model.Chat
 import com.example.chatapplication.model.ChatAdapter
+import com.example.chatapplication.model.NotificationData
 import com.example.chatapplication.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -22,8 +26,12 @@ import com.google.firebase.database.*
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import com.google.gson.Gson
 import com.squareup.picasso.Picasso
 import de.hdodenhof.circleimageview.CircleImageView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.sql.Time
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -35,6 +43,7 @@ class FragmentChat(val userId: String, val userName: String, val imageUser: Circ
     private lateinit var reference: DatabaseReference
     private var chatList = ArrayList<Chat>()
     private lateinit var chatRecyclerView: RecyclerView
+    var topic = ""
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
@@ -82,6 +91,12 @@ class FragmentChat(val userId: String, val userName: String, val imageUser: Circ
             else{
                 sendMessage(firebaseUser.uid, userId, message)
                 etMessage.setText("")
+                topic = "/topics/$userId"
+                PushNotification(NotificationData( userName!!,message),
+                    topic).also {
+                    sendNotification(it)
+                }
+
             }
         }
 
@@ -93,6 +108,7 @@ class FragmentChat(val userId: String, val userName: String, val imageUser: Circ
 
         return view
     }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun sendMessage(senderId: String, receiverId: String, message: String){
@@ -129,6 +145,7 @@ class FragmentChat(val userId: String, val userName: String, val imageUser: Circ
 
                 val chatAdapter = ChatAdapter(context!!, chatList, userId)
                 chatRecyclerView.adapter = chatAdapter
+                chatAdapter.notifyDataSetChanged()
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -137,5 +154,19 @@ class FragmentChat(val userId: String, val userName: String, val imageUser: Circ
         })
         return chatRecyclerView
     }
+
+    private fun sendNotification(notification: PushNotification) = CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val response = RetrofitInstance.api.postNotification(notification)
+            if(response.isSuccessful) {
+                Log.d("TAG", "Response: ${Gson().toJson(response)}")
+            } else {
+                Log.e("TAG", response.errorBody()!!.string())
+            }
+        } catch(e: Exception) {
+            Log.e("TAG", e.toString())
+        }
+    }
+
 }
 

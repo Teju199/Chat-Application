@@ -1,5 +1,6 @@
 package com.example.chatapplication.view
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
@@ -16,11 +17,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.chatapplication.model.Adapter
 import com.example.chatapplication.R
+import com.example.chatapplication.api.FirebaseService
 import com.example.chatapplication.model.User
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
+import com.google.firebase.iid.FirebaseInstanceId
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.squareup.picasso.Picasso
@@ -52,6 +55,11 @@ class ActivityHomePage: AppCompatActivity() {
 
         supportActionBar?.setDisplayShowTitleEnabled(false)
         supportActionBar?.setHomeButtonEnabled(true)
+
+        FirebaseService.sharedPref = getSharedPreferences("sharedPref", Context.MODE_PRIVATE)
+        FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener {
+            FirebaseService.token = it.token
+        }
 
         recyclerView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
 
@@ -100,6 +108,7 @@ class ActivityHomePage: AppCompatActivity() {
 
                 val userAdapter = Adapter(userList, this@ActivityHomePage)
                 recyclerView.adapter = userAdapter
+                userAdapter.notifyDataSetChanged()
             }
 
         })
@@ -129,6 +138,14 @@ class ActivityHomePage: AppCompatActivity() {
                     FragmentLogin()
                 ).commit()
 
+            }
+
+            R.id.action_group -> {
+                FirebaseAuth.getInstance().signOut()
+                supportFragmentManager.beginTransaction().add(
+                    R.id.fragmentContainer1,
+                    FragmentGroup()
+                ).commit()
             }
         }
         return super.onOptionsItemSelected(item)
