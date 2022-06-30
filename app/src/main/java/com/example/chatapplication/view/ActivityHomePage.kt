@@ -1,6 +1,7 @@
 package com.example.chatapplication.view
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
@@ -33,7 +34,8 @@ class ActivityHomePage: AppCompatActivity() {
     lateinit var recyclerView: RecyclerView
     lateinit var userList: ArrayList<User>
     lateinit var menuview: Menu
-    //lateinit var userAdapter: Adapter
+    lateinit var user: User
+    lateinit var userId: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,6 +48,8 @@ class ActivityHomePage: AppCompatActivity() {
         searchView.onActionViewCollapsed()
         searchView.clearFocus()
 
+        userId = FirebaseAuth.getInstance().currentUser?.uid.toString()
+
 
         var imageBack: ImageView = findViewById(R.id.imgBack)
 
@@ -55,11 +59,6 @@ class ActivityHomePage: AppCompatActivity() {
 
         supportActionBar?.setDisplayShowTitleEnabled(false)
         supportActionBar?.setHomeButtonEnabled(true)
-
-        FirebaseService.sharedPref = getSharedPreferences("sharedPref", Context.MODE_PRIVATE)
-        FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener {
-            FirebaseService.token = it.token
-        }
 
         recyclerView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
 
@@ -84,9 +83,7 @@ class ActivityHomePage: AppCompatActivity() {
     }
 
     private fun getUserList(){
-        var firebase: FirebaseUser = FirebaseAuth.getInstance().currentUser!!
         var databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("users")
-        var userId = firebase.uid
         databaseReference.addValueEventListener(object: ValueEventListener{
 
             override fun onCancelled(error: DatabaseError) {
@@ -99,9 +96,9 @@ class ActivityHomePage: AppCompatActivity() {
 
                 for(dataSnapShot: DataSnapshot in snapshot.children){
 
-                    val user = dataSnapShot.getValue(User::class.java)
+                    user = dataSnapShot.getValue(User::class.java)!!
 
-                    if(user!!.userId != firebase.uid){
+                    if(user!!.userId != userId){
                         userList.add(user)
                     }
                 }
@@ -140,12 +137,10 @@ class ActivityHomePage: AppCompatActivity() {
 
             }
 
-            R.id.action_group -> {
-                FirebaseAuth.getInstance().signOut()
-                supportFragmentManager.beginTransaction().add(
-                    R.id.fragmentContainer1,
-                    FragmentGroup()
-                ).commit()
+            R.id.action_group_chat -> {
+                val intent = Intent(this, ActivityGroupChat::class.java)
+                startActivity(intent)
+
             }
         }
         return super.onOptionsItemSelected(item)

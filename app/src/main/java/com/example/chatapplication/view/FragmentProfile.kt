@@ -71,15 +71,6 @@ class FragmentProfile: Fragment() {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val user = snapshot.getValue(User::class.java)
                 fullName.text = user!!.userName
-
-                //profileImage.setImageResource(R.drawable.image2)
-
-                /*if (user.profileImage == "") {
-                    profileImage.setImageResource(R.drawable.image2)
-                } else {
-                    Picasso.get().load(user!!.profileImage).into(profileImage)
-                    //Glide.with(applicationContext).load(user.profileImage).into(profileImage)
-                }*/
             }
 
             override fun onCancelled(error: DatabaseError) {

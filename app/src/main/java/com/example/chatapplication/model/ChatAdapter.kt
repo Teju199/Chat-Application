@@ -21,7 +21,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.properties.Delegates
 
-class ChatAdapter(private val context: Context, private val chatList: ArrayList<Chat>, val userId: String)
+class ChatAdapter(private val context: Context, private val chatList: ArrayList<Chat>, val userId: String?)
     : RecyclerView.Adapter<ChatAdapter.ViewHolder>(){
 
     private val MESSAGE_TYPE_LEFT = 0
@@ -57,6 +57,7 @@ class ChatAdapter(private val context: Context, private val chatList: ArrayList<
             }
         }
         else{
+            //val userId: String = FirebaseAuth.getInstance().uid.toString()
 
             val profileRef: StorageReference = FirebaseStorage.getInstance().reference.child(
                 "users/${userId}/profile.jpg")

@@ -17,6 +17,7 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import kotlin.random.Random
 import android.content.Context
+import com.example.chatapplication.view.FragmentChat
 
 class FirebaseService : FirebaseMessagingService() {
 
@@ -41,7 +42,7 @@ class FirebaseService : FirebaseMessagingService() {
     override fun onMessageReceived(p0: RemoteMessage) {
         super.onMessageReceived(p0)
 
-        val intent = Intent(this,ActivityHomePage::class.java)
+        val intent = Intent(this, FragmentChat::class.java)
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val notificationId = Random.nextInt()
 
@@ -69,7 +70,7 @@ class FirebaseService : FirebaseMessagingService() {
         val channel = NotificationChannel(CHANNEL_ID,channelName,IMPORTANCE_HIGH).apply {
             description="MY FIREBASE CHAT DESCRIPTION"
             enableLights(true)
-            lightColor = Color.WHITE
+            lightColor = Color.GREEN
         }
         notificationManager.createNotificationChannel(channel)
 

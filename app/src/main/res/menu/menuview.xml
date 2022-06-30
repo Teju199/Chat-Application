@@ -2,9 +2,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/action_group"
-        android:title="Create Group"
-        app:showAsAction="never" />
+        android:id="@+id/action_group_chat"
+        android:title="Group Chat"
+        android:icon="@drawable/profileperson_24"
+        app:showAsAction="never"/>
 
     <item
         android:id="@+id/action_profile"

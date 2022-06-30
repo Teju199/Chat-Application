@@ -10,6 +10,7 @@
     app:cardElevation="5dp"
     app:cardMaxElevation="1dp"
     app:cardUseCompatPadding="true"
+    android:layout_marginBottom="10dp"
     android:orientation="vertical">
 
     <LinearLayout

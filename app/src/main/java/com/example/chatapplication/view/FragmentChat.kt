@@ -1,7 +1,5 @@
 package com.example.chatapplication.view
 
-import android.content.Intent
-import android.icu.text.SimpleDateFormat
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -23,19 +21,16 @@ import com.example.chatapplication.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
-import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageReference
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.gson.Gson
-import com.squareup.picasso.Picasso
 import de.hdodenhof.circleimageview.CircleImageView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.sql.Time
-import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+
+const val TOPIC = "/topics/myTopic"
 
 class FragmentChat(val userId: String, val userName: String, val imageUser: CircleImageView) : Fragment() {
 
@@ -43,7 +38,6 @@ class FragmentChat(val userId: String, val userName: String, val imageUser: Circ
     private lateinit var reference: DatabaseReference
     private var chatList = ArrayList<Chat>()
     private lateinit var chatRecyclerView: RecyclerView
-    var topic = ""
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
@@ -52,6 +46,8 @@ class FragmentChat(val userId: String, val userName: String, val imageUser: Circ
     ): View? {
 
         val view = inflater.inflate(R.layout.fragment_chat, container, false)
+
+        FirebaseMessaging.getInstance().subscribeToTopic(TOPIC)
 
         val tvUserName: TextView = view.findViewById(R.id.tvUserName1)
         val imageBack: ImageView = view.findViewById(R.id.imgBack)
@@ -77,8 +73,6 @@ class FragmentChat(val userId: String, val userName: String, val imageUser: Circ
             override fun onCancelled(error: DatabaseError) {
                 TODO("Not yet implemented")
             }
-
-
         })
 
         sendMessageBtn.setOnClickListener {
@@ -91,12 +85,10 @@ class FragmentChat(val userId: String, val userName: String, val imageUser: Circ
             else{
                 sendMessage(firebaseUser.uid, userId, message)
                 etMessage.setText("")
-                topic = "/topics/$userId"
-                PushNotification(NotificationData( userName!!,message),
-                    topic).also {
+
+                PushNotification(NotificationData(userName!!, message), TOPIC).also{
                     sendNotification(it)
                 }
-
             }
         }
 
